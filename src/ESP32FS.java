@@ -1,7 +1,7 @@
 /* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
 /*
-  Tool to put the contents of the sketch's "data" subfolder
+  Tool to put the contents of the sketch's "SPIFFS files" subfolder
   into an SPIFFS partition image and upload it to an ESP32 MCU
 
   Copyright (c) 2015 Hristo Gochkov (hristo at espressif dot com)
@@ -63,7 +63,7 @@ public class ESP32FS implements Tool {
 
 
   public String getMenuTitle() {
-    return "ESP32 Sketch Data Upload";
+    return "ESP32 upload SPIFFS files";
   }
 
   private int listenOnProcess(String[] arguments){
@@ -77,7 +77,7 @@ public class ESP32FS implements Tool {
               while ((c = reader.read()) != -1)
                   System.out.print((char) c);
               reader.close();
-              
+
               reader = new InputStreamReader(p.getErrorStream());
               while ((c = reader.read()) != -1)
                   System.err.print((char) c);
@@ -165,7 +165,7 @@ public class ESP32FS implements Tool {
   private void createAndUpload(){
     long spiStart = 0, spiSize = 0, spiPage = 256, spiBlock = 4096;
     String partitions = "";
-    
+
     if(!PreferencesData.get("target_platform").contentEquals("esp32")){
       System.err.println();
       editor.statusError("SPIFFS Not Supported on "+PreferencesData.get("target_platform"));
@@ -186,7 +186,7 @@ public class ESP32FS implements Tool {
         pythonCmd = "python.exe";
     else
         pythonCmd = "python";
-    
+
     String mkspiffsCmd;
     if(PreferencesData.get("runtime.os").contentEquals("windows"))
         mkspiffsCmd = "mkspiffs.exe";
@@ -196,7 +196,7 @@ public class ESP32FS implements Tool {
     String espotaCmd = "espota.py";
     if(PreferencesData.get("runtime.os").contentEquals("windows"))
         espotaCmd = "espota.exe";
-    
+
     Boolean isNetwork = false;
     File espota = new File(platform.getFolder()+"/tools");
     File esptool = new File(platform.getFolder()+"/tools");
@@ -207,7 +207,7 @@ public class ESP32FS implements Tool {
       editor.statusError("Partitions Not Defined for "+BaseNoGui.getBoardPreferences().get("name"));
       return;
     }
-    
+
     try {
       partitions = BaseNoGui.getBoardPreferences().get("build.partitions");
       if(partitions == null || partitions.contentEquals("")){
@@ -297,10 +297,11 @@ public class ESP32FS implements Tool {
         }
       }
     }
-    
+
     //load a list of all files
     int fileCount = 0;
-    File dataFolder = new File(editor.getSketch().getFolder(), "data");
+    String SPIFFS_FOLDER_NAME = "SPIFFS files";
+    File dataFolder = new File(editor.getSketch().getFolder(), SPIFFS_FOLDER_NAME);
     if (!dataFolder.exists()) {
         dataFolder.mkdirs();
     }
@@ -321,7 +322,7 @@ public class ESP32FS implements Tool {
 
     Object[] options = { "Yes", "No" };
     String title = "SPIFFS Create";
-    String message = "No files have been found in your data folder!\nAre you sure you want to create an empty SPIFFS image?";
+    String message = "No files have been found in your '" + SPIFFS_FOLDER_NAME + "' folder!\nAre you sure you want to create an empty SPIFFS image?";
 
     if(fileCount == 0 && JOptionPane.showOptionDialog(editor, message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]) != JOptionPane.YES_OPTION){
       System.err.println();
